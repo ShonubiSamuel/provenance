@@ -1,0 +1,17 @@
+@import "tailwindcss";
+
+/* Indeterminate progress: a sweeping stripe for downloads whose total size is unknown
+   (GitHub streams repo archives without a Content-Length). Visible MOTION, per NN/g —
+   a static or pulsing bar reads as "stuck". */
+@keyframes progress-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(400%);
+  }
+}
+
+.animate-progress-sweep {
+  animation: progress-sweep 1.4s ease-in-out infinite;
+}

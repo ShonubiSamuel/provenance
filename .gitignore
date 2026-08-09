@@ -1,0 +1,18 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+/secrets/
+/data/
+*.db
+*.db-wal
+*.db-shm
+.pytest_cache/
+.ruff_cache/
+node_modules/
+apps/web/dist/
+*.egg-info/
+# Runtime artefacts of a local launch: logs and the PID files the Quit button uses.
+.run/
+.DS_Store
