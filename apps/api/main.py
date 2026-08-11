@@ -28,6 +28,7 @@ from urllib.parse import quote
 import httpx
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.responses import Response, StreamingResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import func, select
 from sqlalchemy.orm import aliased
 
@@ -122,6 +123,8 @@ def _setup_logging() -> None:
 
 _setup_logging()
 
+FRONTEND_DIST = Path(__file__).resolve().parents[2] / "apps/web/dist"
+
 
 class _AppState:
     """Holds process-wide singletons so request handlers can reach them via dependencies
@@ -179,6 +182,22 @@ async def lifespan(_app: FastAPI):
 
 
 app = FastAPI(title="GitHub Code Explorer", lifespan=lifespan)
+
+
+@app.middleware("http")
+async def _strip_api_prefix(request, call_next):
+    """Let the built frontend call `/api/*` directly when we serve it from FastAPI.
+
+    In dev, Vite still proxies `/api` to the backend. In the packaged app, the same
+    bundle can run from the backend origin, so we transparently map `/api/...` back to
+    the existing routes without duplicating the whole router tree.
+    """
+    path = request.scope.get("path", "")
+    if path == "/api":
+        request.scope["path"] = "/"
+    elif path.startswith("/api/"):
+        request.scope["path"] = path[4:] or "/"
+    return await call_next(request)
 
 
 @dataclass
@@ -1160,3 +1179,27 @@ def cancel_download(
             pass
     mark_status(download_id, "removed")
     return Response(status_code=204)
+
+
+class _FrontendFiles(StaticFiles):
+    """Static files for the built frontend, with one correction to the defaults.
+
+    Vite fingerprints `assets/*`, so those are safe to cache forever. `index.html` is
+    *not* fingerprinted: it is the file that names the current bundle. Served with no
+    cache directive, a browser will happily reuse yesterday's copy — which points at
+    yesterday's JS — so a rebuilt frontend keeps rendering the old UI until someone
+    thinks to hard-reload. Revalidating the entry point costs one request and removes a
+    failure mode that looks exactly like "my changes did nothing".
+    """
+
+    async def get_response(self, path: str, scope):  # type: ignore[override]
+        resp = await super().get_response(path, scope)
+        if path in ("", ".", "index.html") or path.endswith(".html"):
+            resp.headers["cache-control"] = "no-cache, must-revalidate"
+        elif path.startswith("assets/"):
+            resp.headers["cache-control"] = "public, max-age=31536000, immutable"
+        return resp
+
+
+if FRONTEND_DIST.exists():
+    app.mount("/", _FrontendFiles(directory=FRONTEND_DIST, html=True), name="frontend")
