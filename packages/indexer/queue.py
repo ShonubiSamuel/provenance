@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import case, select
 
 from packages.core.enums import JobStatus, JobType, SearchStatus
 from packages.storage.db import session_scope
@@ -124,7 +124,15 @@ def reconcile_search_readiness() -> int:
 def claim_next() -> dict | None:
     """Atomically claim the next runnable job (queued, past its not_before). Returns a
     detached dict snapshot so the caller can run outside the DB transaction.
+
+    Discovery jumps the queue. It is the only job type someone is actually waiting on —
+    until it runs, their search sits at 'pending' with an empty screen — whereas
+    enrichment and history only fill in columns of results already on screen. Under strict
+    FIFO one broad search (a thousand repos, several thousand follow-up jobs) starves the
+    next search for many minutes, which is indistinguishable from the app being hung.
+    Ordering stays FIFO within each class, so nothing is skipped, only reordered.
     """
+    priority = case((Job.type == str(JobType.DISCOVERY), 0), else_=1)
     with session_scope() as s:
         stmt = (
             select(Job)
@@ -132,7 +140,7 @@ def claim_next() -> dict | None:
                 Job.status == str(JobStatus.QUEUED),
                 (Job.not_before.is_(None)) | (Job.not_before <= _now()),
             )
-            .order_by(Job.id)
+            .order_by(priority, Job.id)
             .limit(1)
             .with_for_update(skip_locked=True)
         )
