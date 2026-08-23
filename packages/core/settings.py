@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     api_port: int = 8787
 
     # Download manager (aria2). RPC binds to loopback; secret is generated per run.
-    download_dir: str = "~/Downloads/github-code-explorer"
+    download_dir: str = "~/Data/datasets/unity-repo-corpus"
     aria2_rpc_port: int = 6801
     aria2_max_connections: int = 8  # per server; keep modest to respect GitHub limits
     downloads_autostart: bool = True  # tests set false to avoid spawning a real aria2c
