@@ -101,7 +101,9 @@ class DownloadManager:
     def start(self) -> None:
         """Spawn the aria2c daemon and connect. No-op (leaves `available` False) if the
         aria2c binary isn't installed, so the app still runs without downloads."""
-        binary = shutil.which("aria2c")
+        binary = shutil.which("aria2c") or shutil.which(
+            "aria2c", path=f"{os.environ.get('PATH', '')}:/opt/homebrew/bin:/usr/local/bin"
+        )
         if binary is None:
             log.warning("aria2c not found on PATH — download manager disabled")
             return

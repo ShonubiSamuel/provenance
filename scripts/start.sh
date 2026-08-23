@@ -1,6 +1,6 @@
 #!/bin/bash
 # Starts the GitHub Code Explorer backend + frontend and opens the browser.
-set -euo pipefail
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 PROJECT_DIR="/Users/samuelshonubi/Documents/Dev/github-code-explorer"
 LOG_DIR="$PROJECT_DIR/.run"
