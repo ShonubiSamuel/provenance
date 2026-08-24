@@ -55,8 +55,9 @@ npm run dev               # http://localhost:5173
 ```
 
 Downloads are handled by a backend-managed **aria2** engine (`brew install aria2`),
-not the browser: files/folders/repos queue into `~/Downloads/github-code-explorer/`
-with parallel connections, pause/resume, and a persistent history.
+not the browser: files/folders/repos queue into `DOWNLOAD_DIR` (default
+`~/Data/datasets/unity-repo-corpus`, configurable in `.env`) with parallel
+connections, pause/resume, and a persistent history.
 
 Status: **functional** — index a query, watch results stream in as enrichment
 completes, filter via facets, sort by asset-added, inspect any repo in-app, and

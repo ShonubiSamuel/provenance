@@ -56,7 +56,7 @@ EXT_LANGUAGE: dict[str, str] = {
     ".ts": "TypeScript", ".tsx": "TypeScript", ".py": "Python", ".cpp": "C++",
     ".cc": "C++", ".h": "C", ".hpp": "C++", ".c": "C", ".java": "Java", ".go": "Go",
     ".rs": "Rust", ".json": "JSON", ".yaml": "YAML", ".yml": "YAML", ".asmdef": "JSON",
-    ".uss": "USS", ".uxml": "UXML", ".cginc ": "HLSL",
+    ".uss": "USS", ".uxml": "UXML",
 }
 
 
@@ -67,6 +67,7 @@ class DiscoveredFile:
     repo_github_id: int
     repo_full_name: str
     repo_language: str | None
+    repo_pushed_at: str | None
     path: str
     sha: str | None
     snippet: str | None
@@ -147,6 +148,7 @@ def _to_file(item: dict) -> DiscoveredFile:
         repo_github_id=repo["id"],
         repo_full_name=repo["full_name"],
         repo_language=repo_lang,
+        repo_pushed_at=repo.get("pushed_at"),
         path=path,
         sha=item.get("sha"),
         snippet=_extract_snippet(item),

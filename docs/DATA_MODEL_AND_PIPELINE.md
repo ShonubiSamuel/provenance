@@ -1,8 +1,9 @@
 # GitHub Code Explorer — Data Model & Pipeline Contract
 
-Status: **DRAFT for review** — nothing is scaffolded yet. This document defines the
-two things that are expensive to change later: the **storage schema** and the
-**pipeline stage contracts**. Review these before we write code.
+Status: **implemented** — stages 1–3 and the detector framework are built and tested
+(see README.md for current status); clone-precise history and FTS5-backed search are
+still to come. This document defines the two things that are expensive to change later:
+the **storage schema** and the **pipeline stage contracts**.
 
 ---
 

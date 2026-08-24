@@ -97,7 +97,14 @@ class SqlRepoStore:
             return True
         if pushed_at is None or repo.pushed_at_at_last_index is None:
             return True
-        return pushed_at > repo.pushed_at_at_last_index
+        # SQLite round-trips DateTime(timezone=True) as naive, even for values that were
+        # written tz-aware — normalize both sides so the comparison can't raise.
+        last_index = repo.pushed_at_at_last_index
+        if last_index.tzinfo is None:
+            last_index = last_index.replace(tzinfo=timezone.utc)
+        if pushed_at.tzinfo is None:
+            pushed_at = pushed_at.replace(tzinfo=timezone.utc)
+        return pushed_at > last_index
 
 
 class SqlMatchStore:

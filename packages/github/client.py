@@ -166,10 +166,12 @@ class GitHubClient:
                     resp.headers.get("x-ratelimit-remaining"),
                     bucket, attempt + 1, max_retries + 1,
                 )
-                self.health.note_error(_rate_limit_message(resp))
+                message = _rate_limit_message(resp)
+                self.health.note_error(message)
                 self._park(bucket, resp)
                 if attempt < max_retries:
                     continue
+                raise GitHubUnavailable(message)
             elif resp.status_code == 403:
                 raise GitHubForbidden(
                     "GitHub refused this request (403). The token may lack the required "

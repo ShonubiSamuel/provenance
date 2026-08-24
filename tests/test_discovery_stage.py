@@ -13,12 +13,12 @@ os.environ["DATABASE_URL"] = "sqlite:///:memory:"
 
 import pytest
 
-from packages.core.enums import SearchStatus
+from packages.core.enums import JobType, SearchStatus
 from packages.core.settings import get_settings
 from packages.indexer.stages import run_discovery
 from packages.storage.db import init_db, session_scope
-from packages.storage.orm import Search, SearchResult
-from packages.storage.repositories import SqlSearchStore
+from packages.storage.orm import Job, Search, SearchResult
+from packages.storage.repositories import SqlRepoStore, SqlSearchStore
 
 
 @pytest.fixture(autouse=True)
@@ -56,17 +56,21 @@ def _search_row(search_id: int) -> dict:
 class HealthyGH:
     """Serves a page at a time, like GitHub on a good day."""
 
-    def __init__(self, count: int) -> None:
+    def __init__(self, count: int, pushed_at: str | None = None) -> None:
         self.count = count
         self.pages_served = 0
         self.health = _Health()
+        self.pushed_at = pushed_at
 
     async def search_code(self, query: str, *, page: int = 1, per_page: int = 100, **_) -> dict:
         self.pages_served += 1
         start = (page - 1) * per_page
         items = [
             {
-                "repository": {"id": i, "full_name": f"owner{i}/repo{i}", "language": "C#"},
+                "repository": {
+                    "id": i, "full_name": f"owner{i}/repo{i}", "language": "C#",
+                    "pushed_at": self.pushed_at,
+                },
                 "path": f"Assets/Thing/File{i}.cs",
                 "sha": f"sha{i}",
             }
@@ -176,3 +180,58 @@ async def test_absurdly_broad_query_is_sampled_and_says_so():
     assert row["reported"] == 212_860_928
     assert "too many to index" in row["note"]
     assert gh.pages_served == 10  # ten pages, not a 300-call bisection into nothing
+
+
+def _enrichment_jobs() -> list[str]:
+    with session_scope() as s:
+        rows = s.query(Job).filter(Job.type == str(JobType.REPO_ENRICHMENT)).all()
+        return [j.dedup_key for j in rows]
+
+
+def _mark_enriched(github_id: int, pushed_at: str) -> None:
+    """Simulate a completed enrichment: what upsert_metadata() would set."""
+    with session_scope() as s:
+        SqlRepoStore(s).upsert_metadata(github_id, pushed_at=_iso(pushed_at))
+
+
+def _iso(s: str):
+    from dateutil import parser as dtparse
+
+    return dtparse.isoparse(s)
+
+
+@pytest.mark.asyncio
+async def test_rediscovering_an_unchanged_repo_does_not_requeue_enrichment():
+    """A repo already enriched, re-found by a later search with the same pushed_at,
+    must not spend another enrichment job — the whole point of needs_enrichment()."""
+    search_id = _new_search("Thing", "Thing")
+    gh = HealthyGH(1, pushed_at="2024-01-01T00:00:00Z")
+    await run_discovery(gh, {"search_id": search_id, "normalized_query": "Thing"})
+
+    jobs_after_first = _enrichment_jobs()
+    assert len(jobs_after_first) == 1  # brand-new repo: always enriched once
+
+    _mark_enriched(0, "2024-01-01T00:00:00Z")
+
+    search_id_2 = _new_search("Thing", "Thing")
+    gh2 = HealthyGH(1, pushed_at="2024-01-01T00:00:00Z")  # unchanged
+    await run_discovery(gh2, {"search_id": search_id_2, "normalized_query": "Thing"})
+
+    assert _enrichment_jobs() == jobs_after_first  # no new job — nothing changed
+
+
+@pytest.mark.asyncio
+async def test_rediscovering_a_repo_pushed_since_last_enrichment_requeues_it():
+    """A repo that has genuinely gained commits since it was last enriched must get a
+    fresh enrichment job — stale stars/forks/license must not persist forever."""
+    search_id = _new_search("Thing", "Thing")
+    gh = HealthyGH(1, pushed_at="2024-01-01T00:00:00Z")
+    await run_discovery(gh, {"search_id": search_id, "normalized_query": "Thing"})
+    _mark_enriched(0, "2024-01-01T00:00:00Z")
+
+    search_id_2 = _new_search("Thing", "Thing")
+    gh2 = HealthyGH(1, pushed_at="2024-06-01T00:00:00Z")  # pushed since
+    await run_discovery(gh2, {"search_id": search_id_2, "normalized_query": "Thing"})
+
+    jobs = _enrichment_jobs()
+    assert len(jobs) == 2  # the original job plus a fresh one for the new push

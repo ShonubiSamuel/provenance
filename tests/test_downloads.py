@@ -84,7 +84,7 @@ async def test_429_without_headers_parks_bucket():
     import httpx
 
     from packages.core.settings import Settings
-    from packages.github.client import GitHubClient
+    from packages.github.client import GitHubClient, GitHubUnavailable
     from packages.github.ratelimit import RateLimiter
 
     gh = GitHubClient(
@@ -104,7 +104,7 @@ async def test_429_without_headers_parks_bucket():
     await gh._http.aclose()
     gh._http = httpx.AsyncClient(transport=transport)
     try:
-        with pytest.raises(httpx.HTTPStatusError):
+        with pytest.raises(GitHubUnavailable):
             await gh.get_json("/rate-limited", use_etag=False)
     finally:
         await gh.aclose()

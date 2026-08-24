@@ -148,9 +148,17 @@ async def run_discovery(gh: GitHubClient, payload: dict) -> None:
 
                 if repo.id not in seen_repos:
                     seen_repos.add(repo.id)
-                    to_emit.append(
-                        (JobType.REPO_ENRICHMENT, f"enrich:{repo.id}", {"repo_id": repo.id})
-                    )
+                    observed_pushed_at = _parse_dt(f.repo_pushed_at)
+                    if repo_store.needs_enrichment(repo, observed_pushed_at):
+                        # Keyed on the observed pushed_at (not just repo.id) so a repo
+                        # that has genuinely moved since its last enrichment gets a
+                        # fresh job — enqueue()'s dedup_key is otherwise permanent and
+                        # would silently no-op every re-discovery forever.
+                        to_emit.append((
+                            JobType.REPO_ENRICHMENT,
+                            f"enrich:{repo.id}:{f.repo_pushed_at or 'unknown'}",
+                            {"repo_id": repo.id},
+                        ))
                 prefix_key = (repo.id, f.path_prefix)
                 if prefix_key not in seen_prefixes:
                     seen_prefixes.add(prefix_key)
@@ -242,6 +250,7 @@ query($owner:String!, $name:String!) {
     databaseId stargazerCount forkCount isFork isArchived
     createdAt pushedAt updatedAt
     description
+    owner { __typename }
     defaultBranchRef { name }
     licenseInfo { spdxId }
     primaryLanguage { name }
@@ -281,6 +290,7 @@ async def run_repo_enrichment(gh: GitHubClient, payload: dict) -> None:
             forks=node.get("forkCount"),
             is_fork=node.get("isFork", False),
             is_archived=node.get("isArchived", False),
+            owner_type=(node.get("owner") or {}).get("__typename"),
             parent_full_name=(node.get("parent") or {}).get("nameWithOwner"),
             default_branch=(node.get("defaultBranchRef") or {}).get("name"),
             license_spdx=(node.get("licenseInfo") or {}).get("spdxId"),
