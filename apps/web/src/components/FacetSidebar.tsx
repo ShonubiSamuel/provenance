@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import type {
   FacetGroup,
   FacetSelection,
@@ -35,6 +36,14 @@ export function FacetSidebar({
   onClear: () => void
 }) {
   const anySelected = Object.values(selection).some((s) => s && s.size > 0)
+  const [expanded, setExpanded] = useState<Set<FacetGroup>>(new Set())
+  const toggleExpanded = (group: FacetGroup) =>
+    setExpanded((prev) => {
+      const next = new Set(prev)
+      if (next.has(group)) next.delete(group)
+      else next.add(group)
+      return next
+    })
   return (
     <aside className="w-64 shrink-0 space-y-5">
       {anySelected && (
@@ -49,13 +58,15 @@ export function FacetSidebar({
         const values: FacetValue[] = facets.facets[group] ?? []
         if (values.length === 0) return null
         const selected = selection[group]
+        const isExpanded = expanded.has(group)
+        const visible = isExpanded ? values : values.slice(0, MAX_VISIBLE)
         return (
           <section key={group}>
             <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
               {GROUP_LABELS[group]}
             </h3>
-            <ul className="space-y-0.5">
-              {values.slice(0, MAX_VISIBLE).map(({ value, count }) => {
+            <ul className={`space-y-0.5 ${isExpanded ? 'max-h-64 overflow-y-auto pr-1' : ''}`}>
+              {visible.map(({ value, count }) => {
                 const active = selected?.has(value) ?? false
                 return (
                   <li key={value}>
@@ -75,12 +86,15 @@ export function FacetSidebar({
                   </li>
                 )
               })}
-              {values.length > MAX_VISIBLE && (
-                <li className="px-2 py-1 text-xs text-slate-600">
-                  +{values.length - MAX_VISIBLE} more
-                </li>
-              )}
             </ul>
+            {values.length > MAX_VISIBLE && (
+              <button
+                onClick={() => toggleExpanded(group)}
+                className="mt-0.5 w-full rounded px-2 py-1 text-left text-xs text-sky-400 hover:bg-slate-800 hover:text-sky-300"
+              >
+                {isExpanded ? 'Show less' : `+${values.length - MAX_VISIBLE} more`}
+              </button>
+            )}
           </section>
         )
       })}
