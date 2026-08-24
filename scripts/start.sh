@@ -1,8 +1,8 @@
 #!/bin/bash
-# Starts the GitHub Code Explorer backend + frontend and opens the browser.
+# Starts the Provenance backend + frontend and opens the browser.
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
-PROJECT_DIR="/Users/samuelshonubi/Documents/Dev/github-code-explorer"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 LOG_DIR="$PROJECT_DIR/.run"
 mkdir -p "$LOG_DIR"
 

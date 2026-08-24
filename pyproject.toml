@@ -1,5 +1,5 @@
 [project]
-name = "github-code-explorer"
+name = "provenance"
 version = "0.1.0"
 description = "A local research index over GitHub code — filters, history, and 'first appeared' sorting GitHub Code Search can't do."
 requires-python = ">=3.11"

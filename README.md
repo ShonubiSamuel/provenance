@@ -1,4 +1,4 @@
-# GitHub Code Explorer
+# Provenance
 
 A local research index over GitHub code. Type **anything** into one box — a name
 (`HighlightPlus`), a path (`Assets/HighlightPlus`), a filename (`Highlight.cs`), an

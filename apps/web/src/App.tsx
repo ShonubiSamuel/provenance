@@ -98,7 +98,7 @@ export default function App() {
     const warning = running
       ? `\n\n${running} download${running > 1 ? 's are' : ' is'} still running. They will be paused and can be retried after you relaunch.`
       : ''
-    if (!window.confirm(`Quit GitHub Code Explorer?${warning}`)) return
+    if (!window.confirm(`Quit Provenance?${warning}`)) return
     try {
       await shutdownApp()
     } catch {
@@ -112,7 +112,7 @@ export default function App() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950 px-6 text-center text-slate-300">
         <div>
-          <p className="text-lg font-semibold text-slate-100">GitHub Code Explorer stopped</p>
+          <p className="text-lg font-semibold text-slate-100">Provenance stopped</p>
           <p className="mt-2 text-sm text-slate-500">
             The backend and dev server have shut down. Your index, download history and
             search history are saved — relaunch from the app to pick up where you left off.
@@ -152,7 +152,7 @@ export default function App() {
       <div className="mx-auto max-w-7xl px-4 py-6">
         <header className="mb-6 flex items-center justify-between gap-3">
           <h1 className="text-lg font-semibold">
-            GitHub Code Explorer
+            Provenance
             <span className="ml-2 text-sm font-normal text-slate-500">
               local index · sort by when an asset first appeared
             </span>

@@ -1,4 +1,4 @@
-# GitHub Code Explorer — Data Model & Pipeline Contract
+# Provenance — Data Model & Pipeline Contract
 
 Status: **implemented** — stages 1–3 and the detector framework are built and tested
 (see README.md for current status); clone-precise history and FTS5-backed search are

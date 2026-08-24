@@ -181,7 +181,7 @@ async def lifespan(_app: FastAPI):
         _state.gh = None
 
 
-app = FastAPI(title="GitHub Code Explorer", lifespan=lifespan)
+app = FastAPI(title="Provenance", lifespan=lifespan)
 
 
 @app.middleware("http")
