@@ -1,5 +1,8 @@
 # Provenance
 
+**Search GitHub code from a local, historical index — and sort results by when the
+matching file actually first appeared, which GitHub's own code search can't do.**
+
 A local research index over GitHub code. Type **anything** into one box — a name
 (`HighlightPlus`), a path (`Assets/HighlightPlus`), a filename (`Highlight.cs`), an
 extension (`*.shader`), a quoted phrase, or a GitHub link — and it works out what you
