@@ -13,6 +13,13 @@ from git history.
 > Not a wrapper around GitHub search. GitHub is the *ingestion source*; all user queries
 > run against a local, enriched, historical index and return instantly.
 
+<p align="center">
+  <img src="docs/screenshots/results.png" alt="Search results grouped by repository, with facets, sort, and a sampled-search warning" width="100%">
+</p>
+<p align="center">
+  <img src="docs/screenshots/inspector.png" alt="In-app repo inspector: file tree, code preview, and download buttons" width="100%">
+</p>
+
 ## Architecture at a glance
 
 ```
