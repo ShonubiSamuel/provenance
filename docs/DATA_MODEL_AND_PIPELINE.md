@@ -12,7 +12,7 @@ the **storage schema** and the **pipeline stage contracts**.
 1. **Repos are deduplicated globally; matches are per-search.** A repo enriched once
    serves every search that touches it. We never re-fetch repo metadata per keyword.
 2. **Asset history is keyed by `(repo, path)`, not by search.** The "first appeared"
-   fact about `Assets/HighlightPlus` in repo X is universal — computed once, reused.
+   fact about `Assets/Plugins/UniTask` in repo X is universal — computed once, reused.
 3. **Everything is idempotent + checkpointed.** Every row that represents work has a
    deterministic natural key and a status, so re-running a job is a no-op or a resume.
 4. **Truncation is first-class.** If a search hit GitHub's 1000-result ceiling, we
@@ -212,7 +212,7 @@ guarantees idempotency.
 
 ### Stage 3 — `AssetHistoryJob` (api-approx tier)  *(implemented — client.commit_bounds_for_path)*
 - **Input:** `repo_id`, `path` (a **directory prefix** by default, e.g.
-  `Assets/HighlightPlus`; file-level path only when the user requests it on demand).
+  `Assets/Plugins/UniTask`; file-level path only when the user requests it on demand).
 - **Does:** `GET /repos/{o}/{r}/commits?path={path}&per_page=1`, read `Link rel="last"`,
   fetch last page → oldest commit = `first_appeared_at`; page 1 → `last_modified_at`.
   ~2 calls.
