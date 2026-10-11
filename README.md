@@ -1,10 +1,12 @@
 # Provenance
 
+[![CI](https://github.com/ShonubiSamuel/provenance/actions/workflows/ci.yml/badge.svg)](https://github.com/ShonubiSamuel/provenance/actions/workflows/ci.yml)
+
 **Search GitHub code from a local, historical index — and sort results by when the
 matching file actually first appeared, which GitHub's own code search can't do.**
 
 A local research index over GitHub code. Type **anything** into one box — a name
-(`HighlightPlus`), a path (`Assets/HighlightPlus`), a filename (`Highlight.cs`), an
+(`UniTask`), a path (`Assets/Plugins/UniTask`), a filename (`UniTask.cs`), an
 extension (`*.shader`), a quoted phrase, or a GitHub link — and it works out what you
 meant. You get filters, facets, and sorting that GitHub Code Search can't provide — most
 notably **sorting repositories by when the matching asset first appeared**, reconstructed
